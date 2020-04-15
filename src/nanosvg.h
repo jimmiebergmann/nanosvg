@@ -25,6 +25,12 @@
  * Bounding box calculation based on http://blog.hackers-cafe.net/2009/06/how-to-calculate-bezier-curves-bounding.html
  *
  */
+ 
+ /*
+ * Change log:
+ * 2020-04-15 - Jimmie Bergmann - Added deciaml to float casts and int to size_t casts.
+ */
+ 
 
 #ifndef NANOSVG_H
 #define NANOSVG_H
@@ -286,7 +292,7 @@ static void nsvg__parseElement(char* s,
 
 	// Get attribs
 	while (!end && *s && nattr < NSVG_XML_MAX_ATTRIBS-3) {
-		char* name = NULL;
+		char* name2 = NULL;
 		char* value = NULL;
 
 		// Skip white space before the attrib name
@@ -296,7 +302,7 @@ static void nsvg__parseElement(char* s,
 			end = 1;
 			break;
 		}
-		name = s;
+		name2 = s;
 		// Find end of the attrib name.
 		while (*s && !nsvg__isspace(*s) && *s != '=') s++;
 		if (*s) { *s++ = '\0'; }
@@ -311,8 +317,8 @@ static void nsvg__parseElement(char* s,
 		if (*s) { *s++ = '\0'; }
 
 		// Store only well formed attributes
-		if (name && value) {
-			attr[nattr++] = name;
+		if (name2 && value) {
+			attr[nattr++] = name2;
 			attr[nattr++] = value;
 		}
 	}
@@ -800,7 +806,7 @@ static float nsvg__convertToPixels(NSVGparser* p, NSVGcoordinate c, float orig, 
 		case NSVG_UNITS_EM:			return c.value * attr->fontSize;
 		case NSVG_UNITS_EX:			return c.value * attr->fontSize * 0.52f; // x-height of Helvetica.
 		case NSVG_UNITS_PERCENT:	return orig + c.value / 100.0f * length;
-		default:					return c.value;
+		default: break;
 	}
 	return c.value;
 }
@@ -841,7 +847,7 @@ static NSVGgradient* nsvg__createGradient(NSVGparser* p, const char* id, const f
 	}
 	if (stops == NULL) return NULL;
 
-	grad = (NSVGgradient*)malloc(sizeof(NSVGgradient) + sizeof(NSVGgradientStop)*(nstops-1));
+	grad = (NSVGgradient*)malloc(sizeof(NSVGgradient) + sizeof(NSVGgradientStop)*((size_t)nstops-1));
 	if (grad == NULL) return NULL;
 
 	// The shape width and height.
@@ -1422,7 +1428,7 @@ static unsigned int nsvg__parseColor(const char* str)
 
 static float nsvg__parseOpacity(const char* str)
 {
-	float val = nsvg__atof(str);
+	float val = (float)nsvg__atof(str);
 	if (val < 0.0f) val = 0.0f;
 	if (val > 1.0f) val = 1.0f;
 	return val;
@@ -1430,7 +1436,7 @@ static float nsvg__parseOpacity(const char* str)
 
 static float nsvg__parseMiterLimit(const char* str)
 {
-	float val = nsvg__atof(str);
+	float val = (float)nsvg__atof(str);
 	if (val < 0.0f) val = 0.0f;
 	return val;
 }
@@ -1463,7 +1469,7 @@ static NSVGcoordinate nsvg__parseCoordinateRaw(const char* str)
 	NSVGcoordinate coord = {0, NSVG_UNITS_USER};
 	char buf[64];
 	coord.units = nsvg__parseUnits(nsvg__parseNumber(str, buf, 64));
-	coord.value = nsvg__atof(buf);
+	coord.value = (float)nsvg__atof(buf);
 	return coord;
 }
 
@@ -2506,19 +2512,19 @@ static void nsvg__parseSVG(NSVGparser* p, const char** attr)
 				const char *s = attr[i + 1];
 				char buf[64];
 				s = nsvg__parseNumber(s, buf, 64);
-				p->viewMinx = nsvg__atof(buf);
+				p->viewMinx = (float)nsvg__atof(buf);
 				while (*s && (nsvg__isspace(*s) || *s == '%' || *s == ',')) s++;
 				if (!*s) return;
 				s = nsvg__parseNumber(s, buf, 64);
-				p->viewMiny = nsvg__atof(buf);
+				p->viewMiny = (float)nsvg__atof(buf);
 				while (*s && (nsvg__isspace(*s) || *s == '%' || *s == ',')) s++;
 				if (!*s) return;
 				s = nsvg__parseNumber(s, buf, 64);
-				p->viewWidth = nsvg__atof(buf);
+				p->viewWidth = (float)nsvg__atof(buf);
 				while (*s && (nsvg__isspace(*s) || *s == '%' || *s == ',')) s++;
 				if (!*s) return;
 				s = nsvg__parseNumber(s, buf, 64);
-				p->viewHeight = nsvg__atof(buf);
+				p->viewHeight = (float)nsvg__atof(buf);
 			} else if (strcmp(attr[i], "preserveAspectRatio") == 0) {
 				if (strstr(attr[i + 1], "none") != 0) {
 					// No uniform scaling
